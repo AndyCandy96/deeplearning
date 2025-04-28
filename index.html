@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>TensorFlow.js Beispiel</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.18.0/dist/tf.min.js"></script> <!-- TensorFlow.js -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet"></script> <!-- Vorgefertigtes Modell -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
+        }
+        img {
+            max-width: 300px;
+        }
+    </style>
+</head>
+<body>
+    <h1>TensorFlow.js - Bild Klassifikation</h1>
+    
+    <input type="file" id="upload" accept="image/*">
+    <br><br>
+    <img id="image" src="" alt="Bild wird hier angezeigt" style="display:none;">
+    
+    <h2 id="ergebnis"></h2>
+
+    <script>
+        let net;
+
+        async function app() {
+            console.log('Modell wird geladen...');
+            net = await mobilenet.load(); // Vorgefertigtes Mobilenet-Modell laden
+            console.log('Modell geladen.');
+
+            const upload = document.getElementById('upload');
+            const imgElement = document.getElementById('image');
+            const ergebnisElement = document.getElementById('ergebnis');
+
+            upload.addEventListener('change', async (event) => {
+                const file = event.target.files[0];
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imgElement.src = e.target.result;
+                    imgElement.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+
+                reader.onloadend = async function() {
+                    await new Promise(resolve => setTimeout(resolve, 100)); // Kleiner Trick, damit das Bild vollständig geladen ist
+                    const result = await net.classify(imgElement);
+                    console.log(result);
+                    ergebnisElement.innerText = `Erkannt: ${result[0].className} (${(result[0].probability * 100).toFixed(2)}%)`;
+                };
+            });
+        }
+
+        app();
+    </script>
+</body>
+</html>
